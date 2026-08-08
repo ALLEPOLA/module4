@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Timber Value Prediction System - Home{% endblock %}
+
+{% block content %}
+<!-- Loading Screen Overlay (Initially Hidden) -->
+<div id="loading-overlay" style="display: none;">
+    <div class="spinner-timber"></div>
+    <h3 class="text-dark fw-bold">Analyzing Timber Metrics...</h3>
+    <p class="text-muted">Running XGBoost regression inference pipeline</p>
+</div>
+
+<!-- Welcome Header Section -->
+<div class="row mb-5">
+    <div class="col-lg-8 mx-auto text-center">
+        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill mb-3">
+            <i class="bi bi-cpu-fill me-1"></i> XGBoost Deployment Pipeline
+        </span>
+        <h2 class="display-6 fw-extrabold text-dark tracking-tight">Timber Valuation System</h2>
+        <p class="lead text-muted">
+            An automated decision support system that predicts expected market bids for commercial timber logs using high-performance machine learning models.
+        </p>
+    </div>
+</div>
+
+<!-- Form and Main Section -->
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header card-header-timber d-flex justify-content-between align-items-center">
+                <h3 class="h5 mb-0"><i class="bi bi-sliders me-2"></i> Log Specification Input</h3>
+                <span class="small text-white-50">21 Input Fields Required</span>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <form action="/predict" method="POST" class="needs-validation" novalidate>
+                    
+                    <!-- Section 1: Wood Identity & Sourcing -->
+                    <div class="form-section-container pt-0">
+                        <h4 class="card-section-title">
+                            <i class="bi bi-tag-fill me-2 text-success"></i> 1. Wood Sourcing & Species
+                        </h4>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="species" class="form-label">Species Choice</label>
+                                <select class="form-select" id="species" name="species" required>
+                                    <option value="Eucalyptus">Eucalyptus</option>
+                                    <option value="Mahogany">Mahogany</option>
+                                    <option value="Pine">Pine</option>
+                                    <option value="Teak" selected>Teak</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="region" class="form-label">Origin Location</label>
+                                <select class="form-select" id="region" name="region" required>
+                                    <option value="Anuradhapura">Anuradhapura</option>
+                                    <option value="Colombo" selected>Colombo</option>
+                                    <option value="Galle">Galle</option>
+                                    <option value="Gampaha">Gampaha</option>
+                                    <option value="Kandy">Kandy</option>
+                                    <option value="Kurunegala">Kurunegala</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="season" class="form-label">Harvest Season</label>
+                                <select class="form-select" id="season" name="season" required>
+                                    <option value="Dry" selected>Dry</option>
+                                    <option value="Inter-monsoon">Inter-monsoon</option>
+                                    <option value="Wet">Wet</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Physical Attributes -->
+                    <div class="form-section-container">
+                        <h4 class="card-section-title">
+                            <i class="bi bi-rulers me-2 text-success"></i> 2. Physical Dimensions & Properties
+                        </h4>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="diameter_cm" class="form-label">Diameter (cm)</label>
+                                <input type="number" step="0.01" class="form-control" id="diameter_cm" name="diameter_cm" value="35.00" min="0.1" placeholder="e.g. 35.0" required>
+                                <div class="invalid-feedback">Required value (>0.1).</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="length_m" class="form-label">Length (meters)</label>
+                                <input type="number" step="0.01" class="form-control" id="length_m" name="length_m" value="5.00" min="0.1" placeholder="e.g. 5.0" required>
+                                <div class="invalid-feedback">Required value (>0.1).</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="volume_m3" class="form-label">Volume (m³)</label>
+                                <input type="number" step="0.0001" class="form-control" id="volume_m3" name="volume_m3" value="0.5000" min="0.0001" placeholder="e.g. 0.5" required>
+                                <div class="invalid-feedback">Required volume (>0.0001).</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="density_kg_m3" class="form-label">Density (kg/m³)</label>
+                                <input type="number" step="1" class="form-control" id="density_kg_m3" name="density_kg_m3" value="650" min="50" placeholder="e.g. 650" required>
+                                <div class="invalid-feedback">Required density (>50).</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="moisture_content" class="form-label">Moisture Content (%)</label>
+                                <input type="number" step="0.1" class="form-control" id="moisture_content" name="moisture_content" value="12.5" min="0" max="100" placeholder="e.g. 12.5" required>
+                                <div class="invalid-feedback">Enter moisture content (0-100%).</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Quality Scores -->
+                    <div class="form-section-container">
+                        <h4 class="card-section-title">
+                            <i class="bi bi-shield-check me-2 text-success"></i> 3. Log Quality & Defect Grades
+                        </h4>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="straightness_score" class="form-label">Straightness (1-10)</label>
+                                <input type="number" step="0.1" class="form-control" id="straightness_score" name="straightness_score" value="8.5" min="1" max="10" required>
+                                <div class="invalid-feedback">Enter score between 1 and 10.</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="taper_score" class="form-label">Taper Score (1-10)</label>
+                                <input type="number" step="0.1" class="form-control" id="taper_score" name="taper_score" value="2.0" min="1" max="10" required>
+                                <div class="invalid-feedback">Enter score between 1 and 10.</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="visible_defects_score" class="form-label">Visible Defects (0-10)</label>
+                                <input type="number" step="0.1" class="form-control" id="visible_defects_score" name="visible_defects_score" value="1.0" min="0" max="10" required>
+                                <div class="invalid-feedback">Enter score between 0 and 10.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="internal_defect_risk" class="form-label">Internal Defect Risk (0-1)</label>
+                                <input type="number" step="0.01" class="form-control" id="internal_defect_risk" name="internal_defect_risk" value="0.15" min="0" max="1" required>
+                                <div class="invalid-feedback">Enter probability (0 to 1).</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="quality_grade" class="form-label">Overall Quality Grade (1-5)</label>
+                                <input type="number" step="1" class="form-control" id="quality_grade" name="quality_grade" value="4" min="1" max="5" required>
+                                <div class="invalid-feedback">Enter grade between 1 and 5.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Market Config -->
+                    <div class="form-section-container">
+                        <h4 class="card-section-title">
+                            <i class="bi bi-graph-up-arrow me-2 text-success"></i> 4. Market Config & Price Indicators
+                        </h4>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label for="avg_market_price_species" class="form-label">Species Base Price (Rs./m³)</label>
+                                <input type="number" step="0.01" class="form-control" id="avg_market_price_species" name="avg_market_price_species" value="150.00" min="1" required>
+                                <div class="invalid-feedback">Must be greater than 1.</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="price_volatility" class="form-label">Price Volatility (0-1)</label>
+                                <input type="number" step="0.01" class="form-control" id="price_volatility" name="price_volatility" value="0.05" min="0" max="1" required>
+                                <div class="invalid-feedback">Enter volatility (0 to 1).</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="market_demand_index" class="form-label">Demand Index</label>
+                                <input type="number" step="0.01" class="form-control" id="market_demand_index" name="market_demand_index" value="1.20" min="0.1" required>
+                                <div class="invalid-feedback">Required (>0.1).</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="supply_index" class="form-label">Supply Index</label>
+                                <input type="number" step="0.01" class="form-control" id="supply_index" name="supply_index" value="0.90" min="0.1" required>
+                                <div class="invalid-feedback">Required (>0.1).</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="export_demand_index" class="form-label">Export Index</label>
+                                <input type="number" step="0.01" class="form-control" id="export_demand_index" name="export_demand_index" value="1.10" min="0.1" required>
+                                <div class="invalid-feedback">Required (>0.1).</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="auction_type" class="form-label">Auction Config</label>
+                                <select class="form-select" id="auction_type" name="auction_type" required>
+                                    <option value="open" selected>Open Bid</option>
+                                    <option value="sealed">Sealed Bid</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="competition_level" class="form-label">Competition Strength</label>
+                                <select class="form-select" id="competition_level" name="competition_level" required>
+                                    <option value="high" selected>High</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="low">Low</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="num_expected_bidders" class="form-label">Expected Bidders</label>
+                                <input type="number" step="1" class="form-control" id="num_expected_bidders" name="num_expected_bidders" value="6" min="1" required>
+                                <div class="invalid-feedback">Must be at least 1.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="text-center pt-3 border-top">
+                        <button type="submit" class="btn btn-timber px-5 py-3 fs-5">
+                            <i class="bi bi-calculator-fill me-2"></i> Compute Expected Bid Value
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar: Model Info & History -->
+    <div class="col-lg-4">
+        
+        <!-- About the Model Card -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-dark text-white py-3">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i> About the Model</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless table-sm mb-3">
+                    <tbody>
+                        <tr>
+                            <td class="text-muted fw-bold">Algorithm:</td>
+                            <td>XGBoost Regressor</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-bold">Framework:</td>
+                            <td>Scikit-learn / XGBoost API</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-bold">Features evaluated:</td>
+                            <td>21 Characteristics</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-bold">Target Variable:</td>
+                            <td>Auction Bid Price (Rs.)</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <hr>
+                <h6>Why use Machine Learning here?</h6>
+                <p class="small text-muted mb-0">
+                    Traditional forestry appraisal relies on simple lookup tables. Using extreme gradient boosted trees (XGBoost) allows the system to analyze complex interactions between structural parameters (density, moisture, taper) and real-time economics (bidder density, index trends) to produce accurate commercial estimations.
+                </p>
+            </div>
+        </div>
+
+        <!-- History Card -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-secondary text-white py-3">
+                <h5 class="mb-0"><i class="bi bi-history me-2"></i> Recent Estimations</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if history %}
+                    <div class="list-group list-group-flush">
+                        {% for item in history %}
+                            <div class="list-group-item p-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="badge bg-success-subtle text-success">{{ item.species }}</span>
+                                    <span class="small text-muted">{{ item.timestamp.split(' ')[0] }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small text-muted">{{ item.diameter_cm }}cm &times; {{ item.length_m }}m</span>
+                                    <strong class="text-dark">Rs. {{ "{:,.2f}".format(item.predicted_value) }}</strong>
+                                </div>
+                                <div class="mt-2 text-end">
+                                    <a href="/download-report/{{ item.id }}" class="btn btn-sm btn-outline-success py-0 px-2" style="font-size: 0.75rem;">
+                                        <i class="bi bi-file-pdf"></i> PDF
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="p-4 text-center text-muted">
+                        <i class="bi bi-database-exclamation fs-3 d-block mb-2"></i>
+                        <span class="small">No predictions stored in database yet.</span>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- JS Form Validation Script -->
+<script>
+    (function () {
+        'use strict'
+        const forms = document.querySelectorAll('.needs-validation')
+        
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    } else {
+                        // Display the overlay spinner once validation succeeds
+                        document.getElementById('loading-overlay').style.display = 'flex';
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+    })()
+</script>
+{% endblock %}
