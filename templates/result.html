@@ -89,9 +89,9 @@
                     <i class="bi bi-bar-chart-line-fill me-2 text-success"></i> Model Interpretability & Metrics
                 </h4>
                 <div class="row g-4 mb-5">
-                    <!-- Left: SHAP Local Feature Attribution Bar Chart -->
-                    <div class="col-md-6">
-                        <div class="card border border-light-subtle h-100 shadow-sm">
+                    <!-- SHAP Local Feature Attribution Bar Chart -->
+                    <div class="col-md-12">
+                        <div class="card border border-light-subtle shadow-sm">
                             <div class="card-header bg-light border-0 py-3">
                                 <h5 class="mb-0 small fw-bold text-dark"><i class="bi bi-bar-chart-steps me-1 text-success"></i> Key Influencing Factors (SHAP)</h5>
                             </div>
@@ -99,21 +99,9 @@
                                 <p class="small text-muted mb-3">
                                     This chart shows the positive (green) and negative (red) contributions of each parameter compared to typical baseline log profiles.
                                 </p>
-                                <div style="height: 250px; position: relative;">
+                                <div style="height: 350px; position: relative;">
                                     <canvas id="shapChart"></canvas>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Right: Radar Quality Spec Chart -->
-                    <div class="col-md-6">
-                        <div class="card border border-light-subtle h-100 shadow-sm">
-                            <div class="card-header bg-light border-0 py-3">
-                                <h5 class="mb-0 small fw-bold text-dark"><i class="bi bi-radar me-1 text-success"></i> Log Quality Profile (Radar)</h5>
-                            </div>
-                            <div class="card-body d-flex justify-content-center align-items-center" style="height: 320px; position: relative;">
-                                <canvas id="radarChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -229,49 +217,6 @@
         }
     });
 
-    // 3. Render Quality Radar Chart
-    const ctxRadar = document.getElementById('radarChart').getContext('2d');
-    new Chart(ctxRadar, {
-        type: 'radar',
-        data: {
-            labels: logQualityData.labels,
-            datasets: [
-                {
-                    label: 'This Log Spec',
-                    data: logQualityData.user_values,
-                    backgroundColor: 'rgba(45, 106, 79, 0.2)',
-                    borderColor: 'rgb(45, 106, 79)',
-                    pointBackgroundColor: 'rgb(45, 106, 79)',
-                    borderWidth: 2
-                },
-                {
-                    label: 'Market Baseline',
-                    data: logQualityData.market_avg,
-                    backgroundColor: 'rgba(212, 163, 115, 0.15)',
-                    borderColor: 'rgb(212, 163, 115)',
-                    pointBackgroundColor: 'rgb(212, 163, 115)',
-                    borderWidth: 2
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                r: {
-                    angleLines: { display: true },
-                    suggestedMin: 0,
-                    suggestedMax: 10,
-                    ticks: { stepSize: 2 }
-                }
-            },
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { boxWidth: 12, padding: 15 }
-                }
-            }
-        }
-    });
+
 </script>
 {% endblock %}
